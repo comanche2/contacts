@@ -22,7 +22,7 @@
           type="text"
       >
     </label>
-    <button>
+    <button class="round">
       +
     </button>
   </form>
@@ -52,21 +52,17 @@ export default {
 <style scoped lang="scss">
 .add-field {
   display: grid;
-  grid-template-columns: 1fr 1fr .2fr;
+  grid-template-columns: 1fr 1fr 20px;
   grid-gap: 5px;
 
   label {
     display: inline-flex;
     justify-content: space-around;
+
     input {
       margin-left: 5px;
       flex: 1 0 auto;
     }
-  }
-
-  button {
-    display: inline-flex;
-    justify-content: center;
   }
 }
 </style>

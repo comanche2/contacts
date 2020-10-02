@@ -7,80 +7,125 @@
       Add Contact
     </button>
     <!--new contact-->
-    <div
-        v-show="addingContact"
+    <form
+        v-if="addingContact"
         class="contacts_new-contact"
+        @submit.prevent="addContact($event)"
     >
-      <add-field @addField="$set(newContact, $event.key, $event.value)" />
-      <template v-for="(item, key) in newContact">
-        <div
-            v-if="item"
-            :key="key"
-            class="contacts_new-contact_field"
+      <label
+          v-for="(item, key) in newContact"
+          :for="key"
+          :key="key"
+          class="contacts_new-contact_field"
+      >
+        {{ key }}:
+        <input
+            v-model="newContact[key]"
+            :name="key"
+            required
         >
-          {{key}}:{{item}}
-          <button @click="onFieldRemove(key)">
-            X
-          </button>
-        </div>
-      </template>
-      <button
+      </label>
+      <input
+          type="submit"
+          value="Add Contact"
+          :disabled="!Object.keys(newContact).length"
+          class="contacts_new-contact_submit"
+      >
+      <input
+          type="button"
+          value="cancel"
           class="contacts_new-contact_cancel"
           @click="addingContact = false"
       >
-        cancel
-      </button>
-      <button
-          :disabled="!Object.keys(newContact).length"
-          class="contacts_new-contact_submit"
-          @click="addContact()"
-      >
-        Add contact
-      </button>
-    </div>
+    </form>
 
     <!--contacts-->
-    <div v-if="contacts.length">
+    <div
+        v-if="contacts && contacts.length"
+        class="contacts_list"
+    >
       Contacts:
-      <div
+      <router-link
           v-for="(contact, index) in contacts"
           :key="index + '_contact'"
+          :to="{name: 'contact', query: {id: contact.id}}"
+          class="contacts_contact"
       >
-        {{ contact }}
-      </div>
+        <button
+            class="round remove-btn"
+            :title="`Remove Field contact`"
+            @click="onContactRemove(index)"
+        >
+          +
+        </button>
+
+        <template
+            v-for="(value, key) in contact"
+        >
+          <template v-if="key !== 'id'">
+            <div :key="'key_' + key + '_in_' + contact">
+              {{ key }}:
+            </div>
+            <div :key="'value_of_' + key + '_in_' + contact">
+              {{value}}
+            </div>
+          </template>
+        </template>
+      </router-link>
     </div>
   </div>
 </template>
 
 <script>
 
-import AddField from "@/components/AddField";
 export default {
   name: 'Home',
-  components: {AddField},
   data() {
     return {
       addingContact: false,
-      contacts: [],
       newField: {
         key: '',
         value: ''
       },
-      newContact: {}
+      newContact: {
+        name: '',
+        number: '',
+        email: ''
+      },
+      lastId: 0
+    }
+  },
+  computed: {
+    contacts: {
+      get() {
+        return this.$store.state.contacts
+      }
     }
   },
   methods: {
-    addContact() {
-      if (!Object.keys(this.newContact).length) {
-        window.alert('Contact is empty')
-      } else {
-        this.contacts.push({...this.newContact});
-        this.newContact = {}
+    async addContact() {
+      this.$store.commit('PUSH_CONTACT', {id: this.lastId, ...this.newContact})
+      this.lastId++;
+      for (let field in this.newContact) {
+        this.newContact[field] = ''
+      }
+      this.addingContact = false
+    },
+    onFieldRemove(key, obj) {
+      const res = window.confirm(`Are you sure you want to delete field '${key}'?`);
+      if (res) this.$delete(obj, key);
+      if (this.contacts.some(el => el.id === obj.id)) {
+        if (Object.keys(obj).length < 2) {
+          const index = this.contacts.findIndex(el => el.id === obj.id);
+          this.$delete(this.contacts, index)
+        }
       }
     },
-    onFieldRemove(key) {
-      const res = window.confirm(`Are you sure you want to delete field '${key}'?`);
-      if (res) this.newContact[key] = undefined
+    onContactRemove(i) {
+      const res = window.confirm(`Are you sure you want to delete ${this.contacts[i].name} contact`);
+      if (res) {
+       this.$delete(this.contacts, i)
+      }
     }
   }
 }
@@ -93,18 +138,31 @@ export default {
     flex-direction: column;
     align-items: center;
 
-    &_new-contact {
-      max-width: 90vw;
-      width: 100%;
+    &_new-contact,
+    &_contact {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       padding: 10px;
       border: 1px solid grey;
       border-radius: 5px;
+    }
+
+    &_new-contact {
+      max-width: 40vw;
+      width: 100%;
 
       &_field {
         width: 100%;
+        margin: 5px 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        input {
+          flex: 1 1 auto;
+          margin-left: 10px;
+        }
 
         &:first-of-type {
           margin: 10px 0 5px;
@@ -114,17 +172,43 @@ export default {
           margin: 5px 0 10px;
         }
 
-        margin: 5px 0;
       }
 
       &_submit,
       &_cancel {
         margin: 10px 5px;
+        padding: 2px 5px;
+        font-size: 14px;
+        text-transform: capitalize;
         width: fit-content;
       }
 
       .add-field {
         width: 100%;
+      }
+    }
+
+    &_list {
+      display: flex;
+      flex-direction: column;
+      flex-wrap: wrap;
+      align-items: center;
+      width: 100%;
+    }
+
+    &_contact {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto auto;
+      grid-gap: 5px;
+      justify-items: start;
+      text-decoration: none;
+      color: initial;
+
+      button {
+        position: absolute;
+        right: -10px;
+        top: -10px;
       }
     }
   }
