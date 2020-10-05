@@ -54,7 +54,7 @@
         <button
             class="round remove-btn"
             :title="`Remove Field contact`"
-            @click="onContactRemove(index)"
+            @click.stop.prevent="onContactRemove(index)"
         >
           +
         </button>
