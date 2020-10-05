@@ -140,12 +140,15 @@ export default {
       return res
     },
     onDeleteField(key) {
-      this.actions.push({
-        type: 'delete',
-        field: key,
-        value: this.contact[key]
-      });
-      this.$store.commit('DELETE_CONTACT_FIELD', {key, id: this.contact.id})
+      const res = window.confirm(`Are you sure you want to delete field ${key}?`);
+      if (res) {
+        this.actions.push({
+          type: 'delete',
+          field: key,
+          value: this.contact[key]
+        });
+        this.$store.commit('DELETE_CONTACT_FIELD', {key, id: this.contact.id})
+      }
     },
     onStepBack() {
       const action = this.actions.pop();
